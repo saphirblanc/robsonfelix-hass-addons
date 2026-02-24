@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [1.2.63] - 2026-02-23
 
+### Fixed
+- Build failure due to `/usr/local/bin/mcp` conflict between hass-mcp (pip) and @playwright/mcp (npm)
+- Switched from `npm install -g @playwright/mcp` to npx cache approach (pre-cache during build, `npx --no-install` at runtime)
+
 ### Changed
 - Playwright Browser add-on: added aarch64 (ARM64) architecture support
 
