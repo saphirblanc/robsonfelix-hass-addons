@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.67] - 2026-04-07
+
+### Changed
+- Version bump for update flow testing
+
 ## [1.2.66] - 2026-04-07
 
 ### Fixed
