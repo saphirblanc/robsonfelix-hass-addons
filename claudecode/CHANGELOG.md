@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.71] - 2026-04-11
+
+### Fixed
+- "ttyd: missing start command" on startup: the `&` operator for the background update checker was splitting the entire preceding `&&` chain into a background subshell, so `$SHELL_CMD` was never set in the foreground process. Fixed by using `;` to terminate the main chain before launching the background loop.
+
 ## [1.2.70] - 2026-04-11
 
 ### Changed

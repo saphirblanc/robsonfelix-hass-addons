@@ -271,7 +271,7 @@ CMD ["/bin/bash", "-c", "\
     SHELL_CMD='tmux new-session -A -s claude'; \
   else \
     SHELL_CMD='bash --login'; \
-  fi && \
+  fi; \
   (while true; do \
     IV=$(npm ls -g @anthropic-ai/claude-code --depth=0 2>/dev/null | grep claude-code | cut -d@ -f3); \
     LV=$(npm show @anthropic-ai/claude-code version 2>/dev/null); \
