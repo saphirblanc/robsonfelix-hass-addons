@@ -56,7 +56,7 @@ RUN case "${BUILD_ARCH}" in \
     chmod +x /usr/bin/ttyd
 
 # Install Claude Code via npm
-RUN npm install -g @anthropic-ai/claude-code
+RUN npm install -g @anthropic-ai/claude-code@latest --no-fund --no-audit
 
 # Install hass-mcp for Home Assistant integration and pymodbus for Modbus operations
 RUN pip3 install --no-cache-dir --break-system-packages hass-mcp pymodbus pyserial

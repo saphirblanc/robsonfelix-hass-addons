@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.1.94] - 2026-04-11
+
+### Fixed
+- Build-time Claude Code install now uses `@latest` so the image always ships with the newest version, not whatever npm cached at build time
+
 ## [2.1.93] - 2026-04-11
 
 ### Changed
