@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] - 2026-04-12
+
+### Fixed
+- `claude-update` and auto-update now use `claude update` instead of `npm install -g`. Newer Claude Code versions block npm from overwriting the binary and require using the built-in update command.
+- Removed `DISABLE_AUTOUPDATER=1` env var so the built-in updater can function correctly.
+- `~/.local/bin/` is now symlinked to persistent storage so updates installed via `claude update` survive add-on restarts and rebuilds.
+
 ## [2.2.1] - 2026-04-14
 
 ### Fixed

@@ -12,8 +12,7 @@ LABEL org.opencontainers.image.licenses="MIT"
 ENV \
     LANG=C.UTF-8 \
     LC_ALL=C.UTF-8 \
-    TERM=xterm-256color \
-    DISABLE_AUTOUPDATER=1
+    TERM=xterm-256color
 
 # Install system dependencies (ttyd installed separately as static binary)
 RUN apk add --no-cache \
@@ -138,7 +137,7 @@ alias c='update_mcp_token && stty cols 220 2>/dev/null; claude'
 alias cc='update_mcp_token && stty cols 220 2>/dev/null; claude --continue'
 alias ha-config='cd /homeassistant'
 alias ha-logs='cat /homeassistant/home-assistant.log 2>/dev/null || echo "Log not found"'
-alias claude-update='echo "Updating Claude Code..." && npm install -g @anthropic-ai/claude-code@latest --no-fund --no-audit 2>&1 | grep -E "(added|updated|claude-code)" || true && echo "Done: $(claude --version 2>/dev/null)"'
+alias claude-update='echo "Updating Claude Code..." && claude update 2>&1; echo "Done: $(claude --version 2>/dev/null)"'
 EOF
 
 # Create update notification script and wire into .bashrc
@@ -229,6 +228,8 @@ CMD ["/bin/bash", "-c", "\
   if [ ! -L /root/.claude ]; then rm -rf /root/.claude; ln -s $PERSIST_DIR /root/.claude; fi && \
   if [ ! -L /root/.config/claude-code ]; then rm -rf /root/.config/claude-code; ln -s $PERSIST_DIR/config /root/.config/claude-code; fi && \
   if [ ! -L /root/.claude.json ]; then touch $PERSIST_DIR/.claude.json; rm -f /root/.claude.json; ln -s $PERSIST_DIR/.claude.json /root/.claude.json; fi && \
+  mkdir -p $PERSIST_DIR/local-bin && \
+  if [ ! -L /root/.local/bin ]; then rm -rf /root/.local/bin; ln -s $PERSIST_DIR/local-bin /root/.local/bin; fi && \
   FONT_SIZE=$(jq -r '.terminal_font_size // 14' /data/options.json) && \
   THEME=$(jq -r '.terminal_theme // \"dark\"' /data/options.json) && \
   SESSION_PERSIST=$(jq -r '.session_persistence // true' /data/options.json) && \
@@ -247,12 +248,12 @@ CMD ["/bin/bash", "-c", "\
   fi && \
   AUTO_UPDATE=$(jq -r '.auto_update_claude // true' /data/options.json) && \
   if [ \"$AUTO_UPDATE\" = \"true\" ]; then \
-    CURRENT_VER=$(npm ls -g @anthropic-ai/claude-code --depth=0 2>/dev/null | grep claude-code | cut -d@ -f3) && \
+    CURRENT_VER=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1) && \
     LATEST_VER=$(npm show @anthropic-ai/claude-code version 2>/dev/null) && \
-    if [ -n \"$LATEST_VER\" ] && [ \"$CURRENT_VER\" != \"$LATEST_VER\" ]; then \
+    if [ -n \"$LATEST_VER\" ] && [ -n \"$CURRENT_VER\" ] && [ \"$CURRENT_VER\" != \"$LATEST_VER\" ]; then \
       echo \"[INFO] Updating Claude Code from $CURRENT_VER to $LATEST_VER...\"; \
-      npm install -g @anthropic-ai/claude-code@latest --no-fund --no-audit 2>&1 | grep -E '(added|updated|claude-code)' || true; \
-      echo \"[INFO] Claude Code updated to $LATEST_VER\"; \
+      claude update 2>&1 || true; \
+      echo \"[INFO] Claude Code update complete: $(claude --version 2>/dev/null)\"; \
     else \
       echo \"[INFO] Claude Code $CURRENT_VER is up to date\"; \
     fi; \
@@ -291,7 +292,7 @@ CMD ["/bin/bash", "-c", "\
     SHELL_CMD='bash --login'; \
   fi; \
   (while true; do \
-    IV=$(npm ls -g @anthropic-ai/claude-code --depth=0 2>/dev/null | grep claude-code | cut -d@ -f3); \
+    IV=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1); \
     LV=$(npm show @anthropic-ai/claude-code version 2>/dev/null); \
     if [ -n \"$LV\" ] && [ -n \"$IV\" ] && [ \"$IV\" != \"$LV\" ]; then \
       echo \"$LV\" > $PERSIST_DIR/.update_notice; \
