@@ -165,4 +165,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -sf http://localhost:7681/ || exit 1
 
 ENTRYPOINT []
-CMD ["/run.sh"]
+CMD ["/bin/bash", "/run.sh"]

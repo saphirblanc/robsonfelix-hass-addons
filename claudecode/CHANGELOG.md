@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.6] - 2026-04-15
+
+### Fixed
+- `run.sh` was committed without the execute bit (mode 100644), causing tini to fail with "Permission denied". Fixed by setting mode 100755 in git and changing CMD to `["/bin/bash", "/run.sh"]` so bash executes the script directly regardless of the file's permission bits.
+
 ## [2.2.5] - 2026-04-15
 
 ### Fixed
