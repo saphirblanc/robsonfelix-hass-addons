@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.7] - 2026-04-15
+
+### Fixed
+- AppArmor profile only grants execute permission (`ixr`) to `/bin/**`, `/usr/bin/**`, `/usr/local/**` etc. — not to `/run.sh` at the filesystem root. Moved startup script to `/usr/local/bin/start-addon.sh` which is in the AppArmor-allowed execution path.
+
 ## [2.2.6] - 2026-04-15
 
 ### Fixed

@@ -150,9 +150,9 @@ RUN echo 'stty cols 220 rows 50 2>/dev/null || true' >> /root/.bashrc
 # Ensure .bashrc is sourced for login shells too
 RUN echo 'source ~/.bashrc' > /root/.profile
 
-# Copy startup script
-COPY run.sh /run.sh
-RUN chmod +x /run.sh
+# Copy startup script to a path AppArmor allows execution from
+COPY run.sh /usr/local/bin/start-addon.sh
+RUN chmod +x /usr/local/bin/start-addon.sh
 
 # Set up PATH
 ENV PATH="/root/.local/bin:${PATH}"
@@ -165,4 +165,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -sf http://localhost:7681/ || exit 1
 
 ENTRYPOINT []
-CMD ["/bin/bash", "/run.sh"]
+CMD ["/usr/local/bin/start-addon.sh"]
