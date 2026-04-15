@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.5] - 2026-04-15
+
+### Fixed
+- Moved all startup logic from an inline Dockerfile CMD bash -c string into a proper `run.sh` shell script. The inline approach caused `\"` quoting to be passed as literal backslashes to jq (breaking the `&&` chain before ttyd started) and shell keywords in the CLAUDE.md content to be misinterpreted as Dockerfile instructions by the linter. The shell script has none of these quoting constraints.
+
 ## [2.2.4] - 2026-04-14
 
 ### Fixed
