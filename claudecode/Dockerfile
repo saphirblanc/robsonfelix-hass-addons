@@ -122,6 +122,7 @@ RUN cat > /root/.bashrc << 'EOF'
 export TERM=xterm-256color
 export LANG=C.UTF-8
 export COLUMNS=220
+export PATH="/root/.local/bin:$PATH"
 PS1='\[\033[1;36m\]claude-code\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\$ '
 
 # Function to update MCP token before starting Claude

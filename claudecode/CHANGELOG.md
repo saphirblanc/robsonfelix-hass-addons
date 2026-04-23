@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.2.9] - 2026-04-16
+
+### Fixed
+- After `claude update`, running `claude` still used the old version. Login shells (bash --login / tmux) source `/etc/profile` on Alpine which resets PATH to system defaults, dropping `/root/.local/bin`. Added `export PATH="/root/.local/bin:$PATH"` to `.bashrc` so it's always restored for interactive sessions.
+
 ## [2.2.8] - 2026-04-16
 
 ### Changed
