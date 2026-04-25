@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.1] - 2026-04-25
+
+### Fixed
+- Removed hardcoded `COLUMNS=220` from `.bashrc` and `stty cols 220` from `c`/`cc` aliases. The forced width caused misaligned wrapping and text whenever the actual xterm.js terminal wasn't 220 columns wide. The pty now reports the real terminal size, so wrapping follows the browser window.
+
 ## [2.3.0] - 2026-04-24
 
 ### Changed
