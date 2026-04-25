@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.2] - 2026-04-25
+
+### Changed
+- Updated repository metadata to point at the `saphirblanc` fork: `repository.yaml` name/url/maintainer and `claudecode/config.yaml` url.
+
 ## [2.3.1] - 2026-04-25
 
 ### Fixed
