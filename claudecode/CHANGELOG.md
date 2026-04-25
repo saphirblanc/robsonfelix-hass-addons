@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.3] - 2026-04-25
+
+### Fixed
+- Removed the remaining `stty cols 220 rows 50` line that was appended to `.bashrc` at image build time. This was the line actually breaking Claude Code's TUI rendering — it set the PTY size via ioctl (not just the `COLUMNS` shell var), so Node.js apps believed the terminal was 220 cols wide regardless of the real browser window. Symptom was right-aligned footer text wrapping off-screen.
+
 ## [2.3.2] - 2026-04-25
 
 ### Changed

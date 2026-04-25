@@ -142,8 +142,6 @@ EOF
 # Create update notification script and wire into .bashrc
 RUN echo '[ -f /homeassistant/.claudecode/.update_notice ] && echo -e "\033[1;33m[UPDATE AVAILABLE]\033[0m Claude Code $(cat /homeassistant/.claudecode/.update_notice) available - restart the add-on or run: claude-update"' > /root/.claude-notify.sh
 RUN echo 'source /root/.claude-notify.sh' >> /root/.bashrc
-# Set PTY width so Node.js apps (like Claude Code) read 220 cols via ioctl, not just the COLUMNS shell var
-RUN echo 'stty cols 220 rows 50 2>/dev/null || true' >> /root/.bashrc
 
 # Ensure .bashrc is sourced for login shells too
 RUN echo 'source ~/.bashrc' > /root/.profile
