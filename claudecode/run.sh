@@ -105,8 +105,25 @@ if [ "$AUTO_UPDATE" = "true" ]; then
     LATEST_VER=$(npm show @anthropic-ai/claude-code version 2>/dev/null)
     if [ -n "$LATEST_VER" ] && [ -n "$CURRENT_VER" ] && [ "$CURRENT_VER" != "$LATEST_VER" ]; then
         echo "[INFO] Updating Claude Code from $CURRENT_VER to $LATEST_VER..."
-        yes 2>/dev/null | timeout 120 claude update 2>&1 || true
-        echo "[INFO] Claude Code update complete: $(claude --version 2>/dev/null)"
+        # DISABLE_AUTOUPDATER=1 (set in Dockerfile to keep the background updater quiet)
+        # also blocks the explicit `claude update` command in recent versions, so unset it
+        # for the duration of this call only.
+        UPDATE_LOG=$(mktemp)
+        if env -u DISABLE_AUTOUPDATER timeout 120 claude update </dev/null >"$UPDATE_LOG" 2>&1; then
+            UPDATE_RC=0
+        else
+            UPDATE_RC=$?
+        fi
+        NEW_VER=$(claude --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if [ "$NEW_VER" = "$LATEST_VER" ]; then
+            echo "[INFO] Claude Code updated to $NEW_VER"
+        else
+            echo "[WARN] Claude Code update did not reach $LATEST_VER (still $NEW_VER, exit=$UPDATE_RC)"
+            echo "[WARN] --- claude update output ---"
+            sed 's/^/[WARN] /' "$UPDATE_LOG"
+            echo "[WARN] --- end output ---"
+        fi
+        rm -f "$UPDATE_LOG"
     else
         echo "[INFO] Claude Code $CURRENT_VER is up to date"
     fi

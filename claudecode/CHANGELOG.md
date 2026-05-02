@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.4] - 2026-05-02
+
+### Fixed
+- Auto-update on add-on restart silently no-op'd. Three issues addressed in `run.sh`:
+  1. `DISABLE_AUTOUPDATER=1` (set in the Dockerfile to suppress the background updater) also blocks the explicit `claude update` command in recent Claude Code versions. The startup updater now unsets this variable for the duration of the `claude update` call only.
+  2. `|| true` masked every failure (timeout, network, prompt deadlock) and the script reported "update complete" with the old version still installed. Now captures the exit code, re-reads `claude --version` after the call, and only logs success when the installed version actually matches the target.
+  3. On failure the captured `claude update` output is now printed (prefixed `[WARN]`) so the real error is visible in the add-on log instead of disappearing.
+- Replaced `yes | claude update` with `claude update </dev/null`. `yes` does not satisfy modern multi-choice migration prompts; closing stdin lets the updater fall back to non-interactive defaults instead of hanging until the 120s timeout.
+
 ## [2.3.3] - 2026-04-25
 
 ### Fixed
