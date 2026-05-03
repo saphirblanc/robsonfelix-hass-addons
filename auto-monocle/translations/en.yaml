@@ -14,6 +14,11 @@ configuration:
     description: >-
       How often to check for new cameras (in seconds).
       Gateway automatically restarts when cameras change.
+  stream_quality:
+    name: Stream Quality
+    description: >-
+      RTSP stream quality for UniFi cameras.
+      "high" uses channel 0 (full resolution), "medium" uses channel 1, "low" uses channel 2.
   camera_filters:
     name: Camera Filters
     description: >-

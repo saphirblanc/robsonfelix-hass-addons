@@ -5,6 +5,18 @@ echo "========================================"
 echo "  Playwright Browser Add-on Starting"
 echo "========================================"
 
+CHROME_PID=
+NGINX_PID=
+
+cleanup() {
+    echo "[INFO] Received shutdown signal, stopping child processes..."
+    [ -n "$NGINX_PID" ] && kill -TERM "$NGINX_PID" 2>/dev/null || true
+    [ -n "$CHROME_PID" ] && kill -TERM "$CHROME_PID" 2>/dev/null || true
+    wait 2>/dev/null || true
+    exit 0
+}
+trap cleanup TERM INT
+
 # Read configuration
 CDP_PORT=$(jq -r '.cdp_port // 9222' /data/options.json)
 INTERNAL_PORT=9223
@@ -128,13 +140,21 @@ CHROME_PID=$!
 
 # Wait for Chrome to start
 echo "[INFO] Waiting for Chromium to start..."
+CHROMIUM_READY=0
 for i in {1..30}; do
     if curl -sf "http://127.0.0.1:${INTERNAL_PORT}/json/version" > /dev/null 2>&1; then
         echo "[INFO] Chromium is ready!"
+        CHROMIUM_READY=1
         break
     fi
     sleep 1
 done
+
+if [ "$CHROMIUM_READY" -ne 1 ]; then
+    echo "[ERROR] Chromium did not become ready within 30s — aborting."
+    kill "$CHROME_PID" 2>/dev/null || true
+    exit 1
+fi
 
 # Start nginx reverse proxy
 echo "[INFO] Starting nginx reverse proxy on 0.0.0.0:${CDP_PORT} -> 127.0.0.1:${INTERNAL_PORT}"

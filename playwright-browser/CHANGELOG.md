@@ -2,7 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.11] - 2026-02-23
+## [0.1.12] - 2026-05-03
+
+### Fixed
+- `io.hass.version` Dockerfile label was hardcoded to `0.1.0` and stayed there through every release. Now sourced from the `BUILD_VERSION` build arg that HA passes automatically, so the image label tracks `config.yaml`. `io.hass.arch` now uses `BUILD_ARCH` instead of a hardcoded `amd64,aarch64` string.
+- Chromium readiness loop fell through silently after 30s when Chromium never came up — nginx then started against a dead backend and the add-on appeared to start successfully. Now records a ready flag and exits with an error (after killing the Chromium process) on timeout.
+- Added SIGTERM/SIGINT trap that kills the Chromium and nginx children before exiting, so add-on stop/restart shuts down cleanly instead of relying on Docker to deliver SIGKILL.
+
+### Changed
+- README now accurately describes the Playwright base (`v1.57.0-noble`) and lists aarch64 as a supported architecture instead of "may come in a future release".
 
 ### Added
 - aarch64 (ARM64) architecture support for Raspberry Pi 4/5, ODROID, etc.

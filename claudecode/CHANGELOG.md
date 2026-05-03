@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.5] - 2026-05-03
+
+### Added
+- `DOCS.md` so the add-on Documentation tab in the Home Assistant UI renders user-facing docs (HA only reads `DOCS.md` for that tab; `README.md` is shown on the info page).
+
+### Fixed
+- `build.yaml` `org.opencontainers.image.source` label still pointed at `apbb2/robsonfelix-hass-addons` after the `saphirblanc` rebrand. Aligned with the URL in `repository.yaml` and `config.yaml`.
+- README copy/paste and tmux sections still described the pre-v2.3.0 mouse-capture behavior (Ctrl+Shift to select, Shift+Insert to paste, mouse-wheel auto-entering copy mode). Rewrote those sections to reflect that mouse mode has been off since v2.3.0 and the browser now handles selection, scrolling, and copy/paste natively.
+
 ## [2.3.4] - 2026-05-02
 
 ### Fixed

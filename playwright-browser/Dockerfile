@@ -2,10 +2,12 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 # Labels
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
 LABEL maintainer="Robson Felix"
-LABEL io.hass.version="0.1.0"
+LABEL io.hass.version="${BUILD_VERSION}"
 LABEL io.hass.type="addon"
-LABEL io.hass.arch="amd64,aarch64"
+LABEL io.hass.arch="${BUILD_ARCH}"
 LABEL org.opencontainers.image.title="Playwright Browser for Home Assistant"
 LABEL org.opencontainers.image.description="Headless Chromium with CDP endpoint for browser automation"
 LABEL org.opencontainers.image.source="https://github.com/robsonfelix/robsonfelix-hass-addons"

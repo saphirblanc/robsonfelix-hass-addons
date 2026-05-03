@@ -6,6 +6,8 @@ echo "  Auto-Monocle Add-on Starting"
 echo "========================================"
 
 MONOCLE_CONFIG="/etc/monocle/monocle.json"
+RESTART_FLAG="/tmp/monocle-restart-requested"
+rm -f "$RESTART_FLAG"
 
 # Read configuration
 MONOCLE_TOKEN=$(bashio::config 'monocle_token')
@@ -35,7 +37,9 @@ fi
 # Get initial config hash
 CONFIG_HASH=$(md5sum "$MONOCLE_CONFIG" 2>/dev/null | cut -d' ' -f1 || echo "none")
 
-# Start camera refresh in background (restarts gateway on changes)
+# Periodic refresh: signals a restart via flag file + pkill, but never starts
+# the gateway itself. The supervising loop below relaunches it, so the parent
+# wait can't return on a restart and exit the container.
 if [ "$AUTO_DISCOVER" = "true" ]; then
     (
         while true; do
@@ -43,16 +47,12 @@ if [ "$AUTO_DISCOVER" = "true" ]; then
             bashio::log.info "Refreshing camera list..."
             python3 /opt/monocle/discover_cameras.py
 
-            # Check if config changed
             NEW_HASH=$(md5sum "$MONOCLE_CONFIG" 2>/dev/null | cut -d' ' -f1 || echo "none")
             if [ "$NEW_HASH" != "$CONFIG_HASH" ]; then
-                bashio::log.info "Camera configuration changed, restarting Monocle Gateway..."
+                bashio::log.info "Camera configuration changed, requesting Monocle Gateway restart..."
                 CONFIG_HASH="$NEW_HASH"
+                touch "$RESTART_FLAG"
                 pkill -f monocle-gateway || true
-                sleep 2
-                cd /opt/monocle
-                ./monocle-gateway &
-                bashio::log.info "Monocle Gateway restarted"
             else
                 bashio::log.info "No camera changes detected"
             fi
@@ -63,10 +63,18 @@ fi
 bashio::log.info "Starting Monocle Gateway..."
 bashio::log.info "Make sure port 443 is forwarded to this add-on"
 
-# Start Monocle Gateway (in foreground to keep container alive)
 cd /opt/monocle
-./monocle-gateway &
-GATEWAY_PID=$!
+while true; do
+    EXIT_CODE=0
+    ./monocle-gateway || EXIT_CODE=$?
 
-# Wait for gateway process
-wait $GATEWAY_PID
+    if [ -f "$RESTART_FLAG" ]; then
+        rm -f "$RESTART_FLAG"
+        bashio::log.info "Restarting Monocle Gateway after camera config change..."
+        sleep 1
+        continue
+    fi
+
+    bashio::log.error "Monocle Gateway exited unexpectedly (code $EXIT_CODE)"
+    exit "$EXIT_CODE"
+done

@@ -2,7 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.1.11] - 2026-01-14
+## [0.1.12] - 2026-05-03
+
+### Fixed
+- Container exited whenever cameras changed. The refresh loop ran `pkill -f monocle-gateway` and started a new gateway in a subshell, but the parent script's `wait $GATEWAY_PID` returned the moment pkill landed and `run.sh` exited — the orphaned gateway in the subshell went down with the container. Replaced with a supervising loop in the parent shell that relaunches the gateway when a `/tmp/monocle-restart-requested` flag is set, and exits with the gateway's status only on unexpected exits.
+- `stream_quality` option was wired into config schema and `discover_cameras.py` but missing from `translations/{en,es,pt-BR}.yaml`, so the field rendered without label or description in the HA UI.
 
 ### Fixed
 - UniFi Protect: Query NVR API directly to get correct `rtspAlias` stream tokens

@@ -14,6 +14,11 @@ configuration:
     description: >-
       Con que frecuencia verificar nuevas camaras (en segundos).
       El gateway se reinicia automaticamente cuando cambian las camaras.
+  stream_quality:
+    name: Calidad del Stream
+    description: >-
+      Calidad del stream RTSP para camaras UniFi.
+      "high" usa el canal 0 (resolucion completa), "medium" usa el canal 1, "low" usa el canal 2.
   camera_filters:
     name: Filtros de Camara
     description: >-
