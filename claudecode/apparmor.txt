@@ -67,4 +67,10 @@ profile claudecode flags=(attach_disconnected,mediate_deleted) {
 
   # Node.js modules
   /usr/lib/node_modules/** ixmr,
+
+  # Native Claude Code install at ~/.local/bin. The path is symlinked to
+  # /homeassistant/.claudecode/local-bin for persistence, so both the
+  # symlink path and its target need execute+mmap permission for Node.
+  /root/.local/bin/** ixmr,
+  /homeassistant/.claudecode/local-bin/** ixmr,
 }

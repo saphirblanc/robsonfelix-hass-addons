@@ -76,18 +76,26 @@ CLAUDEMD
 mkdir -p "$PERSIST_DIR/local-bin"
 [ ! -L /root/.local/bin ] && { rm -rf /root/.local/bin; ln -s "$PERSIST_DIR/local-bin" /root/.local/bin; }
 
-# Bootstrap the native (~/.local/bin) install of Claude Code if it's missing.
+# Bootstrap or repair the native (~/.local/bin) install of Claude Code.
 # The npm-global binary fails to self-update in this container with
-# "Insufficient permissions to install update". The native binary owns its
-# own install path and updates cleanly.
-if [ ! -x /root/.local/bin/claude ]; then
+# "Insufficient permissions to install update". The native binary owns
+# its own install path and updates cleanly.
+#
+# We test by actually running --version (not just `-x`) so an exec-blocked
+# binary (e.g. AppArmor missing ixmr on the install path) triggers a repair
+# instead of poisoning PATH. If even after install the binary still won't
+# run, we delete it so PATH falls back to /usr/local/bin/claude (npm-global)
+# and the rest of run.sh keeps working — better degraded than crash-looping.
+if ! /root/.local/bin/claude --version >/dev/null 2>&1; then
     echo "[INFO] Bootstrapping native Claude Code install at /root/.local/bin/claude..."
     INSTALL_LOG=$(mktemp)
-    if env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1; then
-        echo "[INFO] Native install complete ($(/root/.local/bin/claude --version 2>/dev/null))"
+    env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1 || true
+    if NATIVE_VER=$(/root/.local/bin/claude --version 2>/dev/null) && [ -n "$NATIVE_VER" ]; then
+        echo "[INFO] Native install complete ($NATIVE_VER)"
     else
-        echo "[WARN] Native install failed (exit=$?); falling back to npm-global binary"
+        echo "[WARN] Native install did not produce a runnable binary; removing it and falling back to npm-global. Install log:"
         sed 's/^/[WARN] /' "$INSTALL_LOG"
+        rm -f /root/.local/bin/claude
     fi
     rm -f "$INSTALL_LOG"
 fi

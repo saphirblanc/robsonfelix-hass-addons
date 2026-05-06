@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.7] - 2026-05-06
+
+### Fixed
+- 2.3.6's native-install bootstrap put the add-on into a restart loop: `claude install` wrote a binary at `/root/.local/bin/claude`, but the AppArmor profile only granted `rwk` (read/write/lock) under `/root/**`, with no execute bit. As soon as the binary landed in `PATH`, every subsequent `claude` call failed with `Permission denied` (`claude --version` returned empty, `claude mcp add-json` triggered `set -e`, container restarted, repeat). Two changes:
+  1. `apparmor.txt` now grants `ixmr` (inherit-execute, memory-map, read) on `/root/.local/bin/**` and on the symlink target `/homeassistant/.claudecode/local-bin/**`. Both paths are needed because the persistence symlink resolves to the latter and AppArmor checks the canonical path. Mirrors the existing `ixmr` rule for `/usr/lib/node_modules/**` (line 69), which is why the npm-global binary worked while the native one didn't.
+  2. `run.sh` now tests the native binary by actually running `--version`, not just checking the executable bit, so a future AppArmor regression or a corrupt download is detected. If install still fails to produce a runnable binary, the file is removed so `PATH` falls back to `/usr/local/bin/claude` (npm-global) and the rest of startup proceeds — degraded operation beats a restart loop.
+
 ## [2.3.6] - 2026-05-06
 
 ### Fixed
