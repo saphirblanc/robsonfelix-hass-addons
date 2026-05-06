@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.6] - 2026-05-06
+
+### Fixed
+- `claude update` (both the auto-update on startup and the `claude-update` alias) failed with `Error: Insufficient permissions to install update / Using global installation update method...` and the add-on stayed pinned to the bundled version. The npm-global binary at `/usr/local/lib/node_modules/@anthropic-ai/claude-code` cannot self-update in this container — Claude Code itself recommends migrating to the native install at `~/.local/bin/claude`, which owns its own path. `run.sh` now bootstraps the native install via `claude install latest` on first start (and on any restart where `/root/.local/bin/claude` is missing), so subsequent updates resolve to the native binary and succeed. Native install is written under `$PERSIST_DIR/local-bin` so it survives container rebuilds.
+- `claude-update` alias now unsets `DISABLE_AUTOUPDATER` for the duration of the call, matching the startup auto-updater fix from 2.3.4. Without this, recent Claude Code versions also block the explicit `claude update` invocation when the env var is set.
+
 ## [2.3.5] - 2026-05-03
 
 ### Added

@@ -76,6 +76,22 @@ CLAUDEMD
 mkdir -p "$PERSIST_DIR/local-bin"
 [ ! -L /root/.local/bin ] && { rm -rf /root/.local/bin; ln -s "$PERSIST_DIR/local-bin" /root/.local/bin; }
 
+# Bootstrap the native (~/.local/bin) install of Claude Code if it's missing.
+# The npm-global binary fails to self-update in this container with
+# "Insufficient permissions to install update". The native binary owns its
+# own install path and updates cleanly.
+if [ ! -x /root/.local/bin/claude ]; then
+    echo "[INFO] Bootstrapping native Claude Code install at /root/.local/bin/claude..."
+    INSTALL_LOG=$(mktemp)
+    if env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1; then
+        echo "[INFO] Native install complete ($(/root/.local/bin/claude --version 2>/dev/null))"
+    else
+        echo "[WARN] Native install failed (exit=$?); falling back to npm-global binary"
+        sed 's/^/[WARN] /' "$INSTALL_LOG"
+    fi
+    rm -f "$INSTALL_LOG"
+fi
+
 # Read options from HA config
 FONT_SIZE=$(jq -r '.terminal_font_size // 14' /data/options.json)
 THEME=$(jq -r --arg d dark '.terminal_theme // $d' /data/options.json)
