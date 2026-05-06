@@ -89,12 +89,26 @@ mkdir -p "$PERSIST_DIR/local-bin"
 if ! /root/.local/bin/claude --version >/dev/null 2>&1; then
     echo "[INFO] Bootstrapping native Claude Code install at /root/.local/bin/claude..."
     INSTALL_LOG=$(mktemp)
-    env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1 || true
-    if NATIVE_VER=$(/root/.local/bin/claude --version 2>/dev/null) && [ -n "$NATIVE_VER" ]; then
-        echo "[INFO] Native install complete ($NATIVE_VER)"
+    INSTALL_RC=0
+    env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1 || INSTALL_RC=$?
+    EXEC_OUT=$(/root/.local/bin/claude --version </dev/null 2>&1)
+    EXEC_RC=$?
+    if [ $EXEC_RC -eq 0 ] && [ -n "$EXEC_OUT" ]; then
+        echo "[INFO] Native install complete ($EXEC_OUT)"
     else
-        echo "[WARN] Native install did not produce a runnable binary; removing it and falling back to npm-global. Install log:"
-        sed 's/^/[WARN] /' "$INSTALL_LOG"
+        echo "[WARN] Native install verification failed (install rc=$INSTALL_RC, exec rc=$EXEC_RC). Diagnostic:"
+        echo "[WARN]   exec output: ${EXEC_OUT:-<empty>}"
+        echo "[WARN]   active AppArmor profile:"
+        cat /proc/self/attr/current 2>&1 | sed 's/^/[WARN]     /'
+        echo "[WARN]   ls -la /root/.local/bin/:"
+        ls -la /root/.local/bin/ 2>&1 | sed 's/^/[WARN]     /'
+        echo "[WARN]   ls -la /homeassistant/.claudecode/:"
+        ls -la /homeassistant/.claudecode/ 2>&1 | sed 's/^/[WARN]     /'
+        echo "[WARN]   head -20 of launcher /root/.local/bin/claude:"
+        head -20 /root/.local/bin/claude 2>&1 | sed 's/^/[WARN]     /'
+        echo "[WARN]   install log:"
+        sed 's/^/[WARN]     /' "$INSTALL_LOG"
+        echo "[WARN] Removing /root/.local/bin/claude so PATH falls back to /usr/local/bin/claude (npm-global)."
         rm -f /root/.local/bin/claude
     fi
     rm -f "$INSTALL_LOG"

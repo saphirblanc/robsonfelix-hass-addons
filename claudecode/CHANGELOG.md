@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.8] - 2026-05-06
+
+### Fixed
+- 2.3.7's native-install bootstrap reported "Native install did not produce a runnable binary" even though `claude install` itself printed `✔ Claude Code successfully installed! Version: 2.1.131 / Location: ~/.local/bin/claude`. The fallback path worked — the add-on came up cleanly on the npm-global binary at 2.1.131 — but auto-update was still broken because the native install was being torn down on every start. Two changes:
+  1. `apparmor.txt` — broadened the exec grant to `/homeassistant/.claudecode/** ixmr`. Native installs put a thin launcher at `~/.local/bin/claude` and the actual Node binary + JS bundle deeper under `~/.claude/...` (which symlinks to `/homeassistant/.claudecode/`). The 2.3.7 rule only covered the launcher path, so the launcher's *inner* exec into the bundled Node was still blocked. Mirrors the existing `/usr/lib/node_modules/** ixmr` rule that lets the npm-global binary work.
+  2. `run.sh` — bootstrap verification now logs real diagnostics on failure (exec exit code, captured exec output, active AppArmor profile, `ls -la` of `/root/.local/bin/` and `/homeassistant/.claudecode/`, `head -20` of the launcher, install log). Previously the failure path silenced stderr and discarded exit codes, leaving "did not produce a runnable binary" as the only signal — useless for figuring out which of the half-dozen possible causes actually fired. Fallback behavior is unchanged: broken binary still gets removed so PATH falls back to npm-global.
+
 ## [2.3.7] - 2026-05-06
 
 ### Fixed
