@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.10] - 2026-05-06
+
+### Fixed
+- 2.3.9's diagnostic dump finally pinpointed why native install verification kept failing: the launcher at `/root/.local/bin/claude` is a symlink to the real ELF binary at `/root/.local/share/claude/versions/2.1.131`, not under `/root/.claude/` or `/homeassistant/.claudecode/` as I'd assumed when adding the AppArmor rules in 2.3.7/2.3.8. The kernel resolves the symlink chain (`/root/.local/bin` → persistence symlink → installer's symlink → ELF) and then exec's against the canonical path under `/root/.local/share/claude/`, where the profile only granted `rwk`. AppArmor returned EACCES → bash printed `timeout: failed to run command '/root/.local/bin/claude': Permission denied`.
+  Added `/root/.local/share/claude/** ixmr` to the profile alongside the existing launcher and persistence rules. With all three paths in the symlink chain covered (`/root/.local/bin/**`, `/root/.local/share/claude/**`, `/homeassistant/.claudecode/**`), the launcher's exec now resolves to a path the profile permits.
+- Side effect worth noting: `/root/.local/share/` isn't symlinked to persistent storage, so the native binary gets wiped on add-on version bumps and the bootstrap re-runs `claude install` to re-download (~few seconds, transparent in the log). The bootstrap's existing pre-check correctly detects the missing target and re-installs, so this doesn't need its own fix.
+
 ## [2.3.9] - 2026-05-06
 
 ### Fixed

@@ -68,11 +68,14 @@ profile claudecode flags=(attach_disconnected,mediate_deleted) {
   # Node.js modules
   /usr/lib/node_modules/** ixmr,
 
-  # Native Claude Code install at ~/.local/bin. The launcher lives there
-  # but the actual Node binary + JS bundle live deeper under ~/.claude/
-  # (which is itself symlinked to /homeassistant/.claudecode/), so the
-  # ixmr grant has to cover the whole persisted Claude tree, not just the
-  # launcher path. Mirrors the existing /usr/lib/node_modules/** rule.
+  # Native Claude Code install. The ~/.local/bin/claude launcher is a
+  # symlink to the real ELF binary under ~/.local/share/claude/versions/<v>/,
+  # which is *not* the same path as the /homeassistant/.claudecode/ persistence
+  # tree (only ~/.claude/ is symlinked there, not ~/.local/share/). All three
+  # paths need ixmr so the kernel's symlink resolution can exec end-to-end.
+  # Mirrors the existing /usr/lib/node_modules/** ixmr rule that lets the
+  # npm-global binary work.
   /root/.local/bin/** ixmr,
+  /root/.local/share/claude/** ixmr,
   /homeassistant/.claudecode/** ixmr,
 }
