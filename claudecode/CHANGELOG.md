@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.9] - 2026-05-06
+
+### Fixed
+- 2.3.8 stopped the add-on from starting: the log printed `[INFO] Bootstrapping native Claude Code install at /root/.local/bin/claude...` and then nothing — no diagnostic, no fallback, no ttyd. Cause: when 2.3.8 split the post-install verification into two standalone statements (`EXEC_OUT=$(... claude --version ...)` then `EXEC_RC=$?`), the assignment moved out of the `if`-test context where bash suppresses `set -e` on failed command substitutions. Whenever `claude --version` exited non-zero (which is the entire point — that's how we detect the broken install), `set -e` fired on the assignment and killed the script before the diagnostic block, the fallback removal, or ttyd ever ran. 2.3.7's version dodged this by keeping the assignment inside the `if` test.
+  Fix: capture the rc with `|| EXEC_RC=$?` so the assignment can return non-zero without killing the script (same pattern the `claude install` line already uses), and added `timeout 30` around `claude --version` as defense-in-depth in case the native binary genuinely hangs. The diagnostic block from 2.3.8 is now reachable, so on failure we'll actually see the install layout, exec error, and active AppArmor profile.
+
 ## [2.3.8] - 2026-05-06
 
 ### Fixed

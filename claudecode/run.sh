@@ -91,8 +91,12 @@ if ! /root/.local/bin/claude --version >/dev/null 2>&1; then
     INSTALL_LOG=$(mktemp)
     INSTALL_RC=0
     env -u DISABLE_AUTOUPDATER timeout 120 claude install latest </dev/null >"$INSTALL_LOG" 2>&1 || INSTALL_RC=$?
-    EXEC_OUT=$(/root/.local/bin/claude --version </dev/null 2>&1)
-    EXEC_RC=$?
+    # `set -e` would fire on a failed standalone command-substitution assignment
+    # (it's only suppressed inside `if`/`&&`/`||` contexts). Capture the rc with
+    # `|| EXEC_RC=$?` so verification failures are reachable by the diagnostic
+    # block below instead of silently killing the script before ttyd ever starts.
+    EXEC_RC=0
+    EXEC_OUT=$(timeout 30 /root/.local/bin/claude --version </dev/null 2>&1) || EXEC_RC=$?
     if [ $EXEC_RC -eq 0 ] && [ -n "$EXEC_OUT" ]; then
         echo "[INFO] Native install complete ($EXEC_OUT)"
     else
