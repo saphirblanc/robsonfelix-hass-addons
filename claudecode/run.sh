@@ -173,13 +173,17 @@ if [ "$ENABLE_MCP" = "true" ]; then
       "Read(/config/**)",
       "Read(/share/**)",
       "Read(/media/**)",
-      "Glob(/homeassistant/**)",
-      "Glob(/config/**)",
       "Grep(/homeassistant/**)",
       "Grep(/config/**)"
     ]'
-    jq --argjson tools "$ALLOWED_TOOLS" \
-        '.permissions.allow = ($tools + (.permissions.allow // []) | unique)' \
+    # Glob(path) rules were written here through 2.3.11 but never had any effect —
+    # file permission checks only match Read(path) rules, which already cover every
+    # file-reading tool including Glob. Claude Code warns about them on every start.
+    # The merge below is additive, so they have to be pruned explicitly or they'd
+    # survive in settings.json on existing installs forever.
+    OBSOLETE_TOOLS='["Glob(/homeassistant/**)","Glob(/config/**)"]'
+    jq --argjson tools "$ALLOWED_TOOLS" --argjson obsolete "$OBSOLETE_TOOLS" \
+        '.permissions.allow = (($tools + (.permissions.allow // [])) - $obsolete | unique)' \
         "$SETTINGS_FILE" > /tmp/settings.tmp && mv /tmp/settings.tmp "$SETTINGS_FILE"
     jq --arg token "$SUPERVISOR_TOKEN" \
         '.mcpServers.homeassistant.env.HASS_TOKEN = $token' \

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.12] - 2026-08-03
+
+### Fixed
+- Starting `claude` printed two warnings on every launch: `Permission allow rule (/root/.claude/settings.json): Glob(/homeassistant/**) is not matched by file permission checks — only Read(path) rules are` (and the same for `Glob(/config/**)`). The `Glob(path)` entries `run.sh` has been writing into `permissions.allow` never had any effect — file permission checks only match `Read(path)` rules, and those already cover every file-reading tool including Glob. The equivalent `Read(/homeassistant/**)` and `Read(/config/**)` rules were already in the list, so removing the Glob entries changes no actual permission.
+- The allow-list merge in `run.sh` is additive (`$tools + existing | unique`), so dropping the entries from the source list alone would have left them in `settings.json` on every existing install indefinitely. Added an explicit prune of the two obsolete entries. User-added permissions in the same list are preserved — only those exact two strings are removed.
+
 ## [2.3.11] - 2026-08-03
 
 ### Fixed
