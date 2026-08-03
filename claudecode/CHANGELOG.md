@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.11] - 2026-08-03
+
+### Fixed
+- `claude update` still failed with `Using global installation update method... / Error: Insufficient permissions to install update` whenever the add-on was running on the npm-global binary (i.e. any time the native-install bootstrap fell back). Root cause, missed by 2.3.6-2.3.10 because they all chased the native-install workaround instead of the fallback path: the npm global prefix in this image is `/usr/local`, and `apparmor.txt` only granted `/usr/** r` plus `/usr/local/** ixr` — read and execute, **no write**. The updater's writability check on its own install directory got EACCES from AppArmor and reported it as an npm permissions problem, which is why "run with sudo / fix npm permissions" never helped: the container already runs as root, and `dac_override` doesn't bypass AppArmor path rules. The npm install only succeeded in the first place because AppArmor isn't applied during image builds.
+  Profile now grants write on just the npm global tree and its bin shims (`/usr/local/lib/node_modules/** rwkixm`, `/usr/local/bin/** rwkix`, plus the containing directories so npm can create and rename its staging dirs). The rest of `/usr` stays read-only.
+
+### Changed
+- Update logic moved out of the `claude-update` shell alias and the inline block in `run.sh` into a single script, `claude-update.sh`, installed to `/usr/local/bin/claude-update`. Both the startup auto-updater and the interactive command now run identical code, so a failure reproduces the same way in the add-on log and in the terminal.
+- The script no longer treats the built-in updater as the only option. It compares against the registry first, runs `claude update`, re-checks the version, and if that didn't land it reinstalls directly — `claude install latest` when the active binary is the native one, `npm install -g @anthropic-ai/claude-code@latest` when it's the npm-global one. It exits non-zero and prints the version it's stuck on rather than reporting `Done:` with the old version, which is what made 2.3.x updates look like they'd succeeded.
+- Startup auto-update calls the script with `|| true`, so a failed update degrades to "add-on runs on the older version" instead of blocking ttyd.
+- `claude-update` clears `/homeassistant/.claudecode/.update_notice` on success, so the login banner stops advertising an update you've already installed without waiting up to an hour for the background checker.
+
 ## [2.3.10] - 2026-05-06
 
 ### Fixed

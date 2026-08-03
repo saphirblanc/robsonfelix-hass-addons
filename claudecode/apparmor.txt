@@ -68,6 +68,18 @@ profile claudecode flags=(attach_disconnected,mediate_deleted) {
   # Node.js modules
   /usr/lib/node_modules/** ixmr,
 
+  # npm-global install of Claude Code (prefix is /usr/local). The broad
+  # `/usr/** r` + `/usr/local/** ixr` rules above are read+exec only, so the
+  # built-in updater's writability check on its own install directory failed
+  # with EACCES and surfaced as "Insufficient permissions to install update".
+  # Grant write on just the npm global tree and its bin shims so
+  # `claude update` / `npm install -g` can replace the package in place.
+  /usr/local/lib/ rw,
+  /usr/local/lib/node_modules/ rw,
+  /usr/local/lib/node_modules/** rwkixm,
+  /usr/local/bin/ rw,
+  /usr/local/bin/** rwkix,
+
   # Native Claude Code install. The ~/.local/bin/claude launcher is a
   # symlink to the real ELF binary under ~/.local/share/claude/versions/<v>/,
   # which is *not* the same path as the /homeassistant/.claudecode/ persistence

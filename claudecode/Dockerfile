@@ -136,7 +136,6 @@ alias c='update_mcp_token && claude'
 alias cc='update_mcp_token && claude --continue'
 alias ha-config='cd /homeassistant'
 alias ha-logs='cat /homeassistant/home-assistant.log 2>/dev/null || echo "Log not found"'
-alias claude-update='echo "Updating Claude Code..." && env -u DISABLE_AUTOUPDATER claude update 2>&1; echo "Done: $(claude --version 2>/dev/null)"'
 EOF
 
 # Create update notification script and wire into .bashrc
@@ -146,9 +145,11 @@ RUN echo 'source /root/.claude-notify.sh' >> /root/.bashrc
 # Ensure .bashrc is sourced for login shells too
 RUN echo 'source ~/.bashrc' > /root/.profile
 
-# Copy startup script to a path AppArmor allows execution from
+# Copy scripts to a path AppArmor allows execution from
+# claude-update.sh lands on PATH as `claude-update` and is also called by run.sh
 COPY run.sh /usr/local/bin/start-addon.sh
-RUN chmod +x /usr/local/bin/start-addon.sh
+COPY claude-update.sh /usr/local/bin/claude-update
+RUN chmod +x /usr/local/bin/start-addon.sh /usr/local/bin/claude-update
 
 # Set up PATH
 ENV PATH="/root/.local/bin:${PATH}"
