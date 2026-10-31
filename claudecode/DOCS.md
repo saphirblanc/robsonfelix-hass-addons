@@ -88,15 +88,16 @@ claude --continue
 | `working_directory` | Start directory | `/homeassistant` |
 | `session_persistence` | Use tmux for persistent sessions | `true` |
 | `auto_update_claude` | Auto-update Claude Code on startup | `true` |
-| `model` | Claude model to use | `claude-sonnet-4-6` |
+| `model` | Claude model to use | `claude-opus-5-5` |
 
 ### Model Selection
 
 | Model | Best for |
 |-------|----------|
-| `claude-sonnet-4-6` | Best balance of speed and capability (default) |
-| `claude-opus-4-6` | Most powerful, for complex tasks |
-| `claude-haiku-4-5-20251001` | Fastest, for simple queries |
+| `claude-opus-5-5` | Most powerful, for complex tasks (default) |
+| `claude-sonnet-5-5` | Best balance of speed and capability |
+| `claude-haiku-5-5` | Fastest, for simple queries |
+| `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` | Previous generation, kept for existing configurations |
 
 Enable `auto_update_claude` to ensure new models become available as Anthropic releases them, without needing an add-on update.
 

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.3.13] - 2026-10-31
+
+### Changed
+- Default model is now `claude-opus-5-5` (was `claude-sonnet-4-6`), both in `config.yaml` and in the `run.sh` fallback.
+- Added `claude-opus-5-5`, `claude-sonnet-5-5` and `claude-haiku-5-5` to the `model` option. The 4.x models stay in the list so existing installs that have one saved keep passing schema validation.
+- Existing installs keep their saved `model` value; select `claude-opus-5-5` in the add-on Configuration tab to switch.
+
 ## [2.3.12] - 2026-08-03
 
 ### Fixed

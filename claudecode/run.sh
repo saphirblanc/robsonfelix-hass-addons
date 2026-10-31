@@ -149,7 +149,7 @@ if [ "$AUTO_UPDATE" = "true" ]; then
 fi
 
 # Set Claude model
-MODEL=$(jq -r --arg d claude-sonnet-4-6 '.model // $d' /data/options.json)
+MODEL=$(jq -r --arg d claude-opus-5-5 '.model // $d' /data/options.json)
 export ANTHROPIC_MODEL="$MODEL"
 echo "[INFO] Using Claude model: $MODEL"
 
