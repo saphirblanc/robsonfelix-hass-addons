@@ -141,7 +141,7 @@ CHROME_PID=$!
 # Wait for Chrome to start
 echo "[INFO] Waiting for Chromium to start..."
 CHROMIUM_READY=0
-for i in {1..30}; do
+for _ in {1..30}; do
     if curl -sf "http://127.0.0.1:${INTERNAL_PORT}/json/version" > /dev/null 2>&1; then
         echo "[INFO] Chromium is ready!"
         CHROMIUM_READY=1

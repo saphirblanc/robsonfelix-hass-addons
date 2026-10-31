@@ -6,9 +6,6 @@ url: https://github.com/saphirblanc/robsonfelix-hass-addons
 arch:
   - amd64
   - aarch64
-startup: application
-boot: auto
-init: true
 ingress: true
 ingress_port: 7681
 ingress_stream: true
@@ -18,7 +15,6 @@ homeassistant_api: true
 auth_api: true
 hassio_api: true
 hassio_role: manager
-uart: true
 docker_api: true
 full_access: true
 map:
