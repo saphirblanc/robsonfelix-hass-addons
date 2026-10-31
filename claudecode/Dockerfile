@@ -2,10 +2,10 @@ ARG BUILD_FROM
 FROM ${BUILD_FROM}
 
 # Labels
-LABEL maintainer="Robson Felix"
+LABEL maintainer="Yann Fahrni"
 LABEL org.opencontainers.image.title="Claude Code for Home Assistant"
 LABEL org.opencontainers.image.description="Claude Code CLI with web terminal and HA integration"
-LABEL org.opencontainers.image.source="https://github.com/robsonfelix/robsonfelix-hass-addons"
+LABEL org.opencontainers.image.source="https://github.com/saphirblanc/robsonfelix-hass-addons"
 LABEL org.opencontainers.image.licenses="MIT"
 
 # Environment setup
@@ -48,9 +48,7 @@ ARG BUILD_ARCH
 RUN case "${BUILD_ARCH}" in \
         amd64) TTYD_ARCH="x86_64" ;; \
         aarch64) TTYD_ARCH="aarch64" ;; \
-        armv7|armhf) TTYD_ARCH="armhf" ;; \
-        i386) TTYD_ARCH="i686" ;; \
-        *) TTYD_ARCH="x86_64" ;; \
+        *) echo "Unsupported arch: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac && \
     curl -fsSL "https://github.com/tsl0922/ttyd/releases/download/1.7.7/ttyd.${TTYD_ARCH}" -o /usr/bin/ttyd && \
     chmod +x /usr/bin/ttyd
@@ -92,9 +90,7 @@ RUN npx @playwright/mcp --version || true
 RUN case "${BUILD_ARCH}" in \
         amd64) HA_ARCH="amd64" ;; \
         aarch64) HA_ARCH="aarch64" ;; \
-        armv7|armhf) HA_ARCH="armhf" ;; \
-        i386) HA_ARCH="i386" ;; \
-        *) HA_ARCH="amd64" ;; \
+        *) echo "Unsupported arch: ${BUILD_ARCH}" >&2; exit 1 ;; \
     esac && \
     curl -fsSL "https://github.com/home-assistant/cli/releases/latest/download/ha_${HA_ARCH}" -o /usr/local/bin/ha && \
     chmod +x /usr/local/bin/ha
@@ -122,18 +118,10 @@ export LANG=C.UTF-8
 export PATH="/root/.local/bin:$PATH"
 PS1='\[\033[1;36m\]claude-code\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\]\$ '
 
-# Function to update MCP token before starting Claude
-update_mcp_token() {
-  local SETTINGS_FILE=/root/.claude/settings.json
-  if [ -f "$SETTINGS_FILE" ] && [ -n "$SUPERVISOR_TOKEN" ]; then
-    jq ".mcpServers.homeassistant.env.HASS_TOKEN = \"$SUPERVISOR_TOKEN\"" "$SETTINGS_FILE" > /tmp/settings.tmp 2>/dev/null && mv /tmp/settings.tmp "$SETTINGS_FILE"
-  fi
-}
-
 # Aliases
 alias ll='ls -la'
-alias c='update_mcp_token && claude'
-alias cc='update_mcp_token && claude --continue'
+alias c='claude'
+alias cc='claude --continue'
 alias ha-config='cd /homeassistant'
 alias ha-logs='cat /homeassistant/home-assistant.log 2>/dev/null || echo "Log not found"'
 EOF

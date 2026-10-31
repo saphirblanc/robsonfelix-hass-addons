@@ -7,23 +7,26 @@ PERSIST_DIR=/homeassistant/.claudecode
 
 mkdir -p "$PERSIST_DIR/config" /root/.config
 
-# Write CLAUDE.md for Claude's context
-cat > "$PERSIST_DIR/CLAUDE.md" << 'CLAUDEMD'
+# Add-on context for Claude. It lives in its own file, regenerated on every
+# start, and CLAUDE.md imports it, so the user's own instructions in CLAUDE.md
+# survive restarts.
+cat > "$PERSIST_DIR/addon-context.md" << 'CLAUDEMD'
 # Claude Code - Home Assistant Add-on
 
 ## Path Mapping
 
 In this add-on container, paths are mapped differently than HA Core:
 - `/homeassistant` = HA config directory (equivalent to `/config` in HA Core)
-- `/config` does NOT exist - always use `/homeassistant`
+- `/config` = this add-on's own private config folder (`/addon_configs/<slug>` on the host). It is NOT the HA config.
 
-When users mention `/config/...`, translate to `/homeassistant/...`
+When users mention `/config/...`, they mean the HA config: translate to `/homeassistant/...`
 
 ## Available Paths
 
 | Path | Description | Access |
 |------|-------------|--------|
 | `/homeassistant` | HA configuration | read-write |
+| `/config` | This add-on's private config folder | read-write |
 | `/share` | Shared folder | read-write |
 | `/media` | Media files | read-write |
 | `/ssl` | SSL certificates | read-only |
@@ -66,6 +69,18 @@ logger:
 
 **Key insight:** `_LOGGER.debug()` calls are invisible unless the logger level is set to debug. Use `_LOGGER.info()` or `_LOGGER.warning()` for logs that should always appear.
 CLAUDEMD
+
+# Through 2.3.13 run.sh overwrote CLAUDE.md with the add-on context on every
+# start, so a CLAUDE.md that still starts with that header holds nothing the
+# user wrote: replace it with the import stub. Otherwise keep the user's file
+# and only make sure it imports the add-on context.
+CLAUDE_MD="$PERSIST_DIR/CLAUDE.md"
+IMPORT_LINE='@addon-context.md'
+if [ ! -f "$CLAUDE_MD" ] || head -1 "$CLAUDE_MD" | grep -qxF '# Claude Code - Home Assistant Add-on'; then
+    printf '%s\n\n<!-- The add-on context imported above is regenerated on every start. Add your own instructions below this line: they are kept. -->\n' "$IMPORT_LINE" > "$CLAUDE_MD"
+elif ! grep -qxF "$IMPORT_LINE" "$CLAUDE_MD"; then
+    { printf '%s\n\n' "$IMPORT_LINE"; cat "$CLAUDE_MD"; } > "$CLAUDE_MD.tmp" && mv "$CLAUDE_MD.tmp" "$CLAUDE_MD"
+fi
 
 # Persistence symlinks — keep Claude auth and config across container rebuilds
 [ ! -L /root/.claude ] && { rm -rf /root/.claude; ln -s "$PERSIST_DIR" /root/.claude; }
@@ -149,7 +164,7 @@ if [ "$AUTO_UPDATE" = "true" ]; then
 fi
 
 # Set Claude model
-MODEL=$(jq -r --arg d claude-opus-5-5 '.model // $d' /data/options.json)
+MODEL=$(jq -r --arg d opus '.model // $d' /data/options.json)
 export ANTHROPIC_MODEL="$MODEL"
 echo "[INFO] Using Claude model: $MODEL"
 
@@ -157,9 +172,21 @@ echo "[INFO] Using Claude model: $MODEL"
 claude mcp remove homeassistant -s user 2>/dev/null || true
 claude mcp remove playwright -s user 2>/dev/null || true
 
+# hass-mcp reads HA_URL and HA_TOKEN from the environment: they are exported at
+# the top of this script and inherited by ttyd -> shell -> claude -> hass-mcp.
+# Through 2.3.13 the Supervisor token was also written to settings.json under
+# mcpServers, but Claude Code reads user-scope MCP servers from ~/.claude.json,
+# so that copy was never used. It only left the token on disk, inside
+# /homeassistant and therefore inside HA backups. Remove it from existing installs.
+SETTINGS_FILE=/root/.claude/settings.json
+if [ -f "$SETTINGS_FILE" ]; then
+    jq 'del(.mcpServers.homeassistant) | if .mcpServers == {} then del(.mcpServers) else . end' \
+        "$SETTINGS_FILE" > /tmp/settings.tmp && mv /tmp/settings.tmp "$SETTINGS_FILE"
+fi
+
 if [ "$ENABLE_MCP" = "true" ]; then
     claude mcp add-json homeassistant '{"command":"hass-mcp"}' -s user
-    SETTINGS_FILE=/root/.claude/settings.json
+    [ -f "$SETTINGS_FILE" ] || echo '{}' > "$SETTINGS_FILE"
     ALLOWED_TOOLS='[
       "mcp__homeassistant__get_version",
       "mcp__homeassistant__get_entity",
@@ -184,9 +211,6 @@ if [ "$ENABLE_MCP" = "true" ]; then
     OBSOLETE_TOOLS='["Glob(/homeassistant/**)","Glob(/config/**)"]'
     jq --argjson tools "$ALLOWED_TOOLS" --argjson obsolete "$OBSOLETE_TOOLS" \
         '.permissions.allow = (($tools + (.permissions.allow // [])) - $obsolete | unique)' \
-        "$SETTINGS_FILE" > /tmp/settings.tmp && mv /tmp/settings.tmp "$SETTINGS_FILE"
-    jq --arg token "$SUPERVISOR_TOKEN" \
-        '.mcpServers.homeassistant.env.HASS_TOKEN = $token' \
         "$SETTINGS_FILE" > /tmp/settings.tmp && mv /tmp/settings.tmp "$SETTINGS_FILE"
     echo '[INFO] MCP configured with Home Assistant integration'
     echo '[INFO] Pre-authorized read-only MCP tools'

@@ -23,7 +23,7 @@ claude "Why isn't my motion sensor automation working?"
 - **hass-mcp Integration**: Direct control of HA entities and services
 - **Session Persistence**: Optional tmux integration to preserve sessions across page refreshes
 - **Customizable Theme**: Choose between dark and light terminal themes
-- **Multi-Architecture**: Supports amd64, aarch64, armv7, armhf, and i386
+- **Multi-Architecture**: Supports amd64 and aarch64
 - **Secure Authentication**: Claude Code handles its own authentication securely
 
 ## Setup
@@ -100,18 +100,20 @@ claude --continue
 | `working_directory` | Start directory | /homeassistant |
 | `session_persistence` | Use tmux for persistent sessions | true |
 | `auto_update_claude` | Auto-update Claude Code on startup | true |
-| `model` | Claude model to use | claude-opus-5-5 |
+| `model` | Claude model to use | opus |
 
 ### Model Selection
 
 | Model | Best for |
 |-------|----------|
-| `claude-opus-5-5` | Most powerful, for complex tasks (default) |
-| `claude-sonnet-5-5` | Best balance of speed and capability |
-| `claude-haiku-5-5` | Fastest, for simple queries |
-| `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` | Previous generation, kept for existing configurations |
+| `opus` | Latest Opus: most powerful, for complex tasks (default) |
+| `sonnet` | Latest Sonnet: best balance of speed and capability |
+| `haiku` | Latest Haiku: fastest, for simple queries |
+| `fable` | Fable model, for the hardest and longest tasks (only if your account has access) |
+| `opusplan` | Opus while in plan mode, Sonnet for execution |
+| `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`, `claude-opus-4-6`, `claude-sonnet-4-6`, `claude-haiku-4-5-20251001` | Pin one specific model version. Kept so existing configurations keep working |
 
-Enable `auto_update_claude` to ensure new models become available as Anthropic releases them, without needing an add-on update.
+The aliases (`opus`, `sonnet`, `haiku`, `fable`) always resolve to the newest model of that family, so a new model release needs no add-on update. Keep `auto_update_claude` enabled so Claude Code itself knows about new models.
 
 ## Update Notifications
 
@@ -127,10 +129,15 @@ Both clear automatically after restarting the add-on, which installs the latest 
 | Path | Description | Access |
 |------|-------------|--------|
 | `/homeassistant` | HA configuration directory | read-write |
+| `/config` | This add-on's private config folder (not the HA config) | read-write |
 | `/share` | Shared folder | read-write |
 | `/media` | Media folder | read-write |
 | `/ssl` | SSL certificates | read-only |
 | `/backup` | Backups | read-only |
+
+### Custom instructions for Claude
+
+Put your own instructions in `/homeassistant/.claudecode/CLAUDE.md`. They are kept across restarts and updates. The add-on writes its own context (path mapping, log commands) to `addon-context.md` in the same folder and regenerates that file on every start. Your `CLAUDE.md` imports it through the `@addon-context.md` line: leave that line in place.
 
 ## Session Persistence
 
@@ -233,5 +240,5 @@ After changing configuration:
 
 ## Support
 
-- [GitHub Issues](https://github.com/robsonfelix/robsonfelix-hass-addons/issues)
+- [GitHub Issues](https://github.com/saphirblanc/robsonfelix-hass-addons/issues)
 - [Home Assistant Community](https://community.home-assistant.io/)

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.4.0] - 2026-10-31
+
+### Changed
+- The `model` option now offers Claude Code's model aliases: `opus` (new default), `sonnet`, `haiku`, `fable` and `opusplan`. An alias always resolves to the newest model of its family, so new model releases no longer need an add-on update. The full `claude-*` names stay in the list so existing configurations keep validating and can still pin a version.
+- `CLAUDE.md` is no longer overwritten on every start. The add-on context now goes to `addon-context.md`, which `CLAUDE.md` imports through an `@addon-context.md` line, so instructions you add to `/homeassistant/.claudecode/CLAUDE.md` are kept. An existing `CLAUDE.md` that still holds only the old generated content is replaced with the import stub on first start.
+- Dropped the `armv7`, `armhf` and `i386` architectures, which Home Assistant no longer supports. The Dockerfile now fails the build on an unknown architecture instead of silently downloading amd64 binaries.
+- Image labels and repository links now point to `saphirblanc/robsonfelix-hass-addons`. The "Add repository" button in the repository README pointed to the original upstream repository.
+
+### Fixed
+- The add-on context told Claude that `/config` does not exist. `addon_config` mounts the add-on's private folder there, so the context now describes it correctly.
+- The Supervisor token is no longer written to `settings.json`. `run.sh` and the `c`/`cc` aliases wrote it under `mcpServers.homeassistant.env`, but Claude Code reads user-scope MCP servers from `~/.claude.json`, so that copy was never used. hass-mcp gets the token from the `HA_TOKEN` environment variable, as before. The leftover entry is removed from existing installs on start, so the token no longer lands in HA backups through that file.
+- `run.sh` no longer stops on start when `settings.json` does not exist yet.
+
 ## [2.3.13] - 2026-10-31
 
 ### Changed

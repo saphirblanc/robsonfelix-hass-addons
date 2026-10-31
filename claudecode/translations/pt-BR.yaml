@@ -47,10 +47,11 @@ configuration:
   model:
     name: Modelo Claude
     description: >-
-      O modelo Claude a ser utilizado. claude-opus-5-5 (padrão) é o mais poderoso.
-      claude-sonnet-5-5 oferece o melhor equilíbrio entre velocidade e capacidade.
-      claude-haiku-5-5 é o mais rápido. Os modelos 4.x continuam disponíveis para
-      configurações existentes. A atualização automática do Claude Code (acima) garante que novos
+      O modelo Claude a ser utilizado. Os aliases sempre apontam para o modelo mais
+      recente da sua família: opus (padrão) é o mais poderoso, sonnet oferece o melhor
+      equilíbrio entre velocidade e capacidade, haiku é o mais rápido, fable é para as
+      tarefas mais difíceis (se sua conta tiver acesso), opusplan usa Opus para
+      planejar e Sonnet para executar. Os nomes claude-* fixam uma versão específica. A atualização automática do Claude Code (acima) garante que novos
       modelos fiquem disponíveis sem precisar atualizar o add-on.
 
 network:
